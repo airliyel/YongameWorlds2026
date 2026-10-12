@@ -1,18 +1,12 @@
 /**
  * 2026 YONGAME'S PICK'EM
- * Google Apps Script backend v2
+ * Google Apps Script backend v3
  *
  * Script Properties:
  * - WORLDS_PICKEM_BOT_SECRET : Discord bot과 공유하는 비밀키
- * - PICKEM_SPREADSHEET_ID    : setupSheets()가 자동 저장 가능
+ * - PICKEM_SPREADSHEET_ID    : 승부예측 데이터를 저장할 Google Spreadsheet ID
  *
- * 권장 초기 설정:
- * 1. 승부예측용 Google Spreadsheet에서 확장 프로그램 > Apps Script를 연다.
- * 2. 이 파일을 붙여넣는다.
- * 3. Script Properties에 WORLDS_PICKEM_BOT_SECRET을 등록한다.
- * 4. setupSheets()를 한 번 직접 실행한다.
- *    - 이때 현재 Spreadsheet ID를 PICKEM_SPREADSHEET_ID에 저장한다.
- * 5. 웹 앱으로 새 버전을 배포한다.
+ * setupSheets()를 한 번 실행한 뒤 웹 앱을 새 버전으로 배포하세요.
  */
 
 const CONFIG = {
@@ -27,6 +21,18 @@ const CONFIG = {
   SWISS_TEAM_COUNT: 8,
   LOCK_TIMEOUT_MS: 10000,
 };
+
+const TEAM_IDS = [
+  "GEN", "HLE", "T1", "DK",
+  "AL", "BLG", "TES", "IG",
+  "G2", "MKOI", "KC",
+  "TLAW", "LYON", "C9",
+  "TSW", "CFO", "MVK",
+  "LOS", "FUR",
+];
+
+const PLAYIN_TEAM_IDS = ["KC", "C9", "MVK", "FUR"];
+const LCK_TEAM_IDS = ["GEN", "HLE", "T1", "DK"];
 
 const CODES_HEADERS = [
   "code",
@@ -107,6 +113,7 @@ function doPost(e) {
     }
   } catch (error) {
     console.error(error);
+
     if (error && error.stack) {
       console.error(error.stack);
     }
@@ -124,7 +131,9 @@ function doGet() {
     return json_({
       ok: true,
       service: "YONGAME Worlds 2026 Pick'em",
+      version: "2026-10-12-v3",
       submissionOpen: isSubmissionOpen_(),
+      teamCount: TEAM_IDS.length,
     });
   } catch (error) {
     return json_({
@@ -137,7 +146,7 @@ function doGet() {
 
 /**
  * 최초 1회 실행.
- * 현재 바운드 Spreadsheet가 있으면 그 ID를 Script Properties에 저장한다.
+ * 바운드 Spreadsheet에서 실행할 경우 현재 Spreadsheet ID를 자동 저장한다.
  */
 function setupSheets() {
   const active = SpreadsheetApp.getActiveSpreadsheet();
@@ -161,6 +170,7 @@ function setupSheets() {
   );
 
   const values = settings.getDataRange().getValues();
+
   const hasSubmissionOpen = values.some(
     (row) => String(row[0]).trim() === "submission_open"
   );
@@ -172,9 +182,6 @@ function setupSheets() {
   SpreadsheetApp.flush();
 }
 
-/**
- * 필요할 경우 Spreadsheet ID를 직접 등록할 수 있다.
- */
 function setSpreadsheetId(spreadsheetId) {
   const id = cleanText_(spreadsheetId);
 
@@ -191,7 +198,7 @@ function setSpreadsheetId(spreadsheetId) {
 }
 
 /**
- * 초기 운영용 미할당 제출코드 생성.
+ * 초기 운영용 미할당 코드 생성.
  * 예: generateSubmissionCodes(30)
  */
 function generateSubmissionCodes(count) {
@@ -233,12 +240,12 @@ function generateSubmissionCodes(count) {
 
     generatedRows.push([
       code,
-      "", // discord_user_id
-      "", // issued_at
-      "", // used_at
-      "", // nickname
-      "", // discord_display_name
-      "", // discord_username
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
     ]);
   }
 
@@ -280,8 +287,8 @@ function setSubmissionOpen(open) {
 }
 
 /**
- * Discord /승부의신 명령용 코드 발급.
- * 동일 Discord 사용자에게 항상 동일한 코드를 반환한다.
+ * Discord /승부의신 명령에서 호출한다.
+ * 동일 Discord 사용자에게는 기존 코드를 다시 반환한다.
  */
 function issueDiscordCode_(payload) {
   const configuredSecret = PropertiesService
@@ -433,18 +440,13 @@ function submitPrediction_(payload) {
     });
   }
 
-  if (
-    !Array.isArray(payload.swissTeams) ||
-    payload.swissTeams.length !== CONFIG.SWISS_TEAM_COUNT
-  ) {
-    return json_({
-      ok: false,
-      code: "INVALID_SWISS_COUNT",
-      message: "스위스 진출팀은 정확히 8팀이어야 합니다.",
-    });
+  const normalized = normalizeTeamPayload_(payload);
+  const teamValidation = validateTeamPayload_(normalized);
+
+  if (teamValidation) {
+    return teamValidation;
   }
 
-  // 팀 간 논리적 관계 및 중복 예측은 의도적으로 검사하지 않는다.
   if (!["yes", "no"].includes(String(payload.pentakill))) {
     return invalidValue_("pentakill");
   }
@@ -498,7 +500,6 @@ function submitPrediction_(payload) {
       });
     }
 
-    // 미발급 코드는 추측/직접 입력으로 사용할 수 없게 한다.
     const assignedDiscordUserId = cleanText_(
       codesSheet.getRange(codeRow, 2).getDisplayValue()
     );
@@ -538,25 +539,34 @@ function submitPrediction_(payload) {
       serverSubmittedAt,
       safeCell_(code),
       safeCell_(nickname),
-      safeCell_(payload.playinTeam),
-      safeCell_(payload.swissTeams.map(cleanText_).join("|")),
-      safeCell_(payload.threeZeroTeam1),
-      safeCell_(payload.threeZeroTeam2),
-      safeCell_(payload.champion),
-      safeCell_(payload.runnerUp),
-      safeCell_(payload.semifinalLoser1),
-      safeCell_(payload.semifinalLoser2),
+
+      safeCell_(normalized.playinTeam),
+      safeCell_(normalized.swissTeams.join("|")),
+
+      safeCell_(normalized.threeZeroTeam1),
+      safeCell_(normalized.threeZeroTeam2),
+
+      safeCell_(normalized.champion),
+      safeCell_(normalized.runnerUp),
+
+      safeCell_(normalized.semifinalLoser1),
+      safeCell_(normalized.semifinalLoser2),
+
       safeCell_(payload.pentakill),
       safeCell_(payload.finalMvp),
       safeCell_(payload.finalScore),
+
       safeCell_(payload.fakerAhri),
       safeCell_(payload.uziKaisa),
       safeCell_(payload.capsTristana),
+
       safeCell_(payload.backdoor),
       safeCell_(payload.baronSteal),
       safeCell_(payload.elderSteal),
+
       safeCell_(payload.lckChampion),
-      safeCell_(payload.bestLck),
+      safeCell_(normalized.bestLck),
+
       safeCell_(payload.clientSubmittedAt || ""),
     ];
 
@@ -576,6 +586,91 @@ function submitPrediction_(payload) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * 팀 값은 실제 2026 Worlds 참가팀 ID인지 검사한다.
+ * 단, 문항 간 논리 관계는 검사하지 않는다.
+ * 예: champion과 runnerUp이 같아도 서버는 허용한다.
+ */
+function normalizeTeamPayload_(payload) {
+  return {
+    playinTeam: normalizeTeamId_(payload.playinTeam),
+
+    swissTeams: Array.isArray(payload.swissTeams)
+      ? payload.swissTeams.map(normalizeTeamId_)
+      : [],
+
+    threeZeroTeam1: normalizeTeamId_(payload.threeZeroTeam1),
+    threeZeroTeam2: normalizeTeamId_(payload.threeZeroTeam2),
+
+    champion: normalizeTeamId_(payload.champion),
+    runnerUp: normalizeTeamId_(payload.runnerUp),
+
+    semifinalLoser1: normalizeTeamId_(payload.semifinalLoser1),
+    semifinalLoser2: normalizeTeamId_(payload.semifinalLoser2),
+
+    bestLck: normalizeTeamId_(payload.bestLck),
+  };
+}
+
+function validateTeamPayload_(payload) {
+  if (!PLAYIN_TEAM_IDS.includes(payload.playinTeam)) {
+    return json_({
+      ok: false,
+      code: "INVALID_PLAYIN_TEAM",
+      message: "플레이-인 진출팀 값이 올바르지 않습니다.",
+    });
+  }
+
+  if (
+    !Array.isArray(payload.swissTeams) ||
+    payload.swissTeams.length !== CONFIG.SWISS_TEAM_COUNT
+  ) {
+    return json_({
+      ok: false,
+      code: "INVALID_SWISS_COUNT",
+      message: "스위스 → 녹아웃 진출팀은 정확히 8팀이어야 합니다.",
+    });
+  }
+
+  if (
+    payload.swissTeams.some((team) => !TEAM_IDS.includes(team)) ||
+    new Set(payload.swissTeams).size !== CONFIG.SWISS_TEAM_COUNT
+  ) {
+    return json_({
+      ok: false,
+      code: "INVALID_SWISS_TEAMS",
+      message: "스위스 → 녹아웃 진출팀은 실제 참가팀 중 서로 다른 8팀이어야 합니다.",
+    });
+  }
+
+  for (const key of [
+    "threeZeroTeam1",
+    "threeZeroTeam2",
+    "champion",
+    "runnerUp",
+    "semifinalLoser1",
+    "semifinalLoser2",
+  ]) {
+    if (!TEAM_IDS.includes(payload[key])) {
+      return json_({
+        ok: false,
+        code: "INVALID_TEAM",
+        message: `유효하지 않은 팀 값입니다: ${key}`,
+      });
+    }
+  }
+
+  if (!LCK_TEAM_IDS.includes(payload.bestLck)) {
+    return json_({
+      ok: false,
+      code: "INVALID_LCK_TEAM",
+      message: "LCK 최강 예측은 GEN, HLE, T1, DK 중 하나여야 합니다.",
+    });
+  }
+
+  return null;
 }
 
 function getSpreadsheet_() {
@@ -809,6 +904,10 @@ function normalizeCode_(value) {
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "");
+}
+
+function normalizeTeamId_(value) {
+  return String(value || "").trim().toUpperCase();
 }
 
 function cleanText_(value) {

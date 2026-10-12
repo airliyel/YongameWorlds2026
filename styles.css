@@ -220,7 +220,7 @@ input[type="checkbox"] {
 }
 
 .hero-card-row {
-  padding: 22px 24px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -257,7 +257,7 @@ input[type="checkbox"] {
 }
 
 .section-heading {
-  max-width: 760px;
+  max-width: 790px;
   margin-bottom: 34px;
 }
 
@@ -302,6 +302,131 @@ input[type="checkbox"] {
   margin: 8px 0 0;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* 참가팀 목록 */
+.region-groups {
+  display: grid;
+  gap: 20px;
+}
+
+.region-group {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.region-heading {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.region-heading h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.region-heading span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.roster-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.roster-copy {
+  min-width: 0;
+}
+
+.roster-code {
+  display: block;
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.roster-name {
+  display: block;
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-meta {
+  margin-top: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.stage-badge {
+  color: var(--green);
+  font-weight: 900;
+}
+
+.stage-badge.playin {
+  color: var(--accent-strong);
+}
+
+/* 로고 */
+.team-logo-shell {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.team-logo-img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+.team-logo-fallback {
+  display: none;
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: -0.02em;
+}
+
+.team-logo-shell.logo-failed .team-logo-img {
+  display: none;
+}
+
+.team-logo-shell.logo-failed .team-logo-fallback {
+  display: block;
 }
 
 .prediction-form {
@@ -416,17 +541,21 @@ select:focus {
   box-shadow: 0 0 0 4px rgba(214, 177, 94, 0.08);
 }
 
+/* 팀 선택 카드 */
+.team-radio-grid,
 .team-checkbox-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
-.check-card {
+.team-radio-card,
+.team-check-card {
   position: relative;
 }
 
-.check-card input,
+.team-radio-card > input,
+.team-check-card > input,
 .choice-card input,
 .score-option input,
 .mini-options input {
@@ -435,30 +564,116 @@ select:focus {
   pointer-events: none;
 }
 
-.check-card span {
-  min-height: 50px;
-  padding: 0 12px;
+.team-card-body {
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-muted);
+  transition: 0.18s ease;
+}
+
+.team-radio-card:hover .team-card-body,
+.team-check-card:hover .team-card-body {
+  border-color: rgba(255, 255, 255, 0.24);
+  color: var(--text);
+}
+
+.team-radio-card > input:checked + .team-card-body,
+.team-check-card > input:checked + .team-card-body {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(214, 177, 94, 0.14);
+}
+
+.team-check-card > input:disabled + .team-card-body {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.team-card-copy {
+  min-width: 0;
+  display: grid;
+}
+
+.team-card-code {
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 1000;
+}
+
+.team-card-name {
+  overflow: hidden;
+  font-size: 0.79rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-card-meta {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.selection-counter {
+  margin: -8px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.selection-counter strong {
+  color: var(--accent-strong);
+}
+
+/* select 아래 선택 팀 로고 미리보기 */
+.team-select-field {
+  display: grid;
+  gap: 9px;
+}
+
+.team-select-preview {
+  min-height: 58px;
+  padding: 8px 11px;
   border: 1px solid var(--border);
   border-radius: 12px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.025);
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.team-select-preview.is-empty {
   color: var(--text-muted);
-  font-weight: 800;
-  transition: 0.18s ease;
+  font-size: 0.82rem;
 }
 
-.check-card:hover span {
-  border-color: rgba(255, 255, 255, 0.22);
-  color: var(--text);
+.team-select-preview .team-logo-shell {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+  border-radius: 10px;
 }
 
-.check-card input:checked + span {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  box-shadow: inset 0 0 0 1px rgba(214, 177, 94, 0.16);
+.team-preview-copy {
+  min-width: 0;
+}
+
+.team-preview-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.team-preview-meta {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
 
 .binary-choice {
@@ -617,6 +832,11 @@ select:focus {
   border: 0;
 }
 
+.button-submit:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
 .section-rules {
   padding-top: 30px;
 }
@@ -683,6 +903,17 @@ select:focus {
   opacity: 0.68;
 }
 
+@media (max-width: 1000px) {
+  .roster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .team-radio-grid,
+  .team-checkbox-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .hero-inner {
     min-height: auto;
@@ -701,6 +932,8 @@ select:focus {
     grid-template-columns: 1fr;
   }
 
+  .roster-grid,
+  .team-radio-grid,
   .team-checkbox-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -756,13 +989,8 @@ select:focus {
 
   .two-columns,
   .binary-choice,
-  .score-options,
-  .team-checkbox-grid {
+  .score-options {
     grid-template-columns: 1fr;
-  }
-
-  .team-checkbox-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .submit-panel {
@@ -786,7 +1014,7 @@ select:focus {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 500px) {
   .hero-actions {
     display: grid;
     grid-template-columns: 1fr;
@@ -796,7 +1024,17 @@ select:focus {
     width: 100%;
   }
 
+  .roster-grid,
+  .team-radio-grid,
   .team-checkbox-grid {
     grid-template-columns: 1fr;
+  }
+
+  .region-group {
+    padding: 16px;
+  }
+
+  .team-card-body {
+    min-height: 78px;
   }
 }
