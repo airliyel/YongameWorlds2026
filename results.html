@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="2026 YONGAME'S PICK'EM 참가자 예측, 실시간 순위, 점수 비교" />
+  <title>승부예측 결과 | YONGAME WORLDS 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="results.css" />
+  <script src="results.js" defer></script>
+</head>
+<body class="results-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="승부예측 메인으로">
+        <span class="brand-kicker">YONGAME PICK'EM</span>
+        <span class="brand-title">2026 WORLDS</span>
+      </a>
+      <nav class="results-nav" aria-label="결과 메뉴">
+        <a href="index.html" class="nav-link">제출 페이지</a>
+        <a href="#rankings" class="nav-link">순위</a>
+        <a href="#comparison" class="nav-link">예측 비교</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="results-main">
+    <section class="results-hero" aria-labelledby="results-heading">
+      <div class="results-hero-copy">
+        <p class="eyebrow">2026 WORLD CHAMPIONSHIP · PICK'EM</p>
+        <h1 id="results-heading">승부예측<br><em>결과 공개</em></h1>
+        <p>다른 참가자의 예측을 살펴보고, 현재 상위 3명과 내 선택을 비교해 보세요.</p>
+        <div class="results-meta">
+          <span id="publication-status" class="publication-status">데이터 확인 중</span>
+          <span id="last-updated" class="last-updated">최종 확인 —</span>
+          <button id="refresh-button" type="button" class="refresh-button">새로고침</button>
+        </div>
+      </div>
+      <div class="results-hero-stats" aria-label="전체 통계">
+        <div class="results-stat"><span>참가자</span><strong id="stat-players">—</strong></div>
+        <div class="results-stat"><span>확정된 배점</span><strong id="stat-confirmed">— / 80</strong></div>
+        <div class="results-stat"><span>확정된 문항</span><strong id="stat-questions">— / 17</strong></div>
+      </div>
+    </section>
+
+    <section id="notice-panel" class="notice-panel" role="status" aria-live="polite">
+      <p class="notice-kicker">PUBLIC RESULTS</p>
+      <h2 id="notice-title">공개 상태를 확인하고 있습니다</h2>
+      <p id="notice-description">서버에서 대회 정보를 불러오는 중입니다.</p>
+    </section>
+
+    <div id="public-content" hidden>
+      <section class="results-section" id="podium-section" aria-labelledby="podium-heading">
+        <div class="results-section-header">
+          <div><span class="results-section-kicker">CURRENT LEADERS</span><h2 id="podium-heading">현재 TOP 3</h2></div>
+          <p>현재까지 확정된 문항 기준이며, 최종 순위는 변동될 수 있습니다.</p>
+        </div>
+        <div class="podium-grid" id="top-three"></div>
+      </section>
+
+      <section class="results-section" id="rankings" aria-labelledby="ranking-heading">
+        <div class="results-section-header">
+          <div><span class="results-section-kicker">LEADERBOARD</span><h2 id="ranking-heading">전체 순위 · 참가자 목록</h2></div>
+          <p>닉네임을 누르면 해당 참가자의 예측 결과지가 열립니다.</p>
+        </div>
+        <div class="results-toolbar">
+          <label class="search-label" for="player-search">참가자 검색</label>
+          <input type="search" id="player-search" placeholder="닉네임으로 검색" autocomplete="off" />
+          <span id="search-count" class="search-count" aria-live="polite"></span>
+        </div>
+        <div class="leaderboard-outer">
+          <table class="leaderboard-table">
+            <thead><tr><th>순위</th><th>닉네임</th><th>현재 점수</th><th>확정 문항</th><th></th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="results-section" id="participant-sheet" aria-labelledby="sheet-heading">
+        <div class="results-section-header">
+          <div><span class="results-section-kicker">PREDICTION CARD</span><h2 id="sheet-heading">참가자별 예측 결과지</h2></div>
+          <div id="selected-player-chip" class="selected-player-chip">참가자를 선택해 주세요</div>
+        </div>
+        <div id="participant-detail" class="participant-detail">
+          <p class="empty-info">위 순위표에서 참가자의 닉네임을 선택해 주세요.</p>
+        </div>
+      </section>
+
+      <section class="results-section" id="comparison" aria-labelledby="compare-heading">
+        <div class="results-section-header">
+          <div><span class="results-section-kicker">HEAD TO HEAD</span><h2 id="compare-heading">TOP 3와 내 예측 비교</h2></div>
+          <p>점수뿐 아니라 문항별 선택과 정답 여부를 나란히 비교합니다.</p>
+        </div>
+        <div class="compare-controls">
+          <label for="compare-player">비교할 참가자</label>
+          <select id="compare-player"><option value="">참가자를 선택하세요</option></select>
+          <p class="compare-hint">로그인 기능은 없으며, 여기에서 선택한 참가자를 ‘나’로 표시합니다. 같은 닉네임이 있다면 참가자 ID로 구분하세요.</p>
+        </div>
+        <div id="comparison-result" class="comparison-result" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>2026 YONGAME's PICK'EM</p>
+    <p class="footer-note">정답 미확정 문항은 채점에서 제외됩니다. 순위 및 예측 정보는 공개 설정 이후에만 표시됩니다.</p>
+  </footer>
+</body>
+</html>

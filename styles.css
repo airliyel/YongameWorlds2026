@@ -1038,3 +1038,17 @@ select:focus {
     min-height: 78px;
   }
 }
+
+
+/* v5 · 메인 페이지 제출 상태 */
+.status-closed { color: var(--danger) !important; }
+.submission-closed-notice {
+  padding: 20px 24px;
+  background: rgba(255, 119, 119, .07);
+  border: 1px solid rgba(255, 119, 119, .28);
+  border-radius: 14px;
+  color: var(--text);
+  font-weight: 800;
+}
+.submission-closed-notice[hidden] { display: none !important; }
+.submission-closed-notice a { margin-left: 8px; color: var(--accent-strong); text-decoration: underline; }

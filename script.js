@@ -822,3 +822,52 @@ function escapeHtml(value) {
 function escapeAttribute(value) {
   return escapeHtml(value);
 }
+
+
+/**
+ * 결과 공개용 v5: 운영 중인 제출 상태만 안전하게 반영합니다.
+ * 상태 조회가 실패해도 기존 제출 POST 흐름은 변경하지 않습니다.
+ */
+document.addEventListener("DOMContentLoaded", refreshSubmissionStatus);
+
+async function refreshSubmissionStatus() {
+  const statusNode = document.getElementById("submission-status-display");
+  const titleNode = document.getElementById("submission-status-title");
+  const descNode = document.getElementById("submission-status-description");
+  const closedNotice = document.getElementById("submission-closed-message");
+  const form = document.getElementById("prediction-form");
+  if (!form) return;
+
+  try {
+    const url = new URL(PICKEM_CONFIG.WEB_APP_URL);
+    url.searchParams.set("action", "status");
+    url.searchParams.set("_", String(Date.now()));
+    const response = await fetch(url.toString(), {method: "GET", redirect: "follow", cache: "no-store"});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    if (!payload || payload.ok !== true || typeof payload.submissionOpen !== "boolean") {
+      throw new Error("제출 상태 응답을 확인할 수 없습니다.");
+    }
+
+    if (payload.submissionOpen) {
+      if (statusNode) statusNode.textContent = "SUBMISSION OPEN";
+      if (titleNode) titleNode.textContent = "접수 중";
+      if (descNode) descNode.textContent = "마감 전까지 발급받은 개인 제출 코드로 한 번 제출할 수 있습니다.";
+      if (closedNotice) closedNotice.hidden = true;
+    } else {
+      if (statusNode) {
+        statusNode.textContent = "SUBMISSION CLOSED";
+        statusNode.classList.add("status-closed");
+      }
+      if (titleNode) titleNode.textContent = "접수 마감";
+      if (descNode) descNode.textContent = "새로운 제출은 종료되었습니다. 결과 공개 여부는 결과 페이지에서 확인할 수 있습니다.";
+      if (closedNotice) closedNotice.hidden = false;
+      form.querySelectorAll("input, select, button").forEach(element => {element.disabled = true;});
+    }
+  } catch (error) {
+    console.warn("제출 상태 조회에 실패했습니다. 실제 제출 허용 여부는 서버에서 최종 확인합니다.", error);
+    if (statusNode) statusNode.textContent = "상태 확인 불가";
+    if (titleNode) titleNode.textContent = "서버 확인 필요";
+    if (descNode) descNode.textContent = "제출은 서버에서 최종 검증됩니다. 이미 마감된 경우 제출이 거부됩니다.";
+  }
+}

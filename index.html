@@ -22,6 +22,7 @@
 
       <nav class="top-nav" aria-label="주요 메뉴">
         <a class="nav-link active" href="#predict">승부예측</a>
+        <a class="nav-link" href="results.html">결과 · 순위</a>
         <a class="nav-link" href="#teams">참가팀</a>
         <a class="nav-link" href="#rules">배점표</a>
       </nav>
@@ -41,6 +42,7 @@
 
           <div class="hero-actions">
             <a class="button button-primary" href="#predict">예측 시작하기</a>
+            <a class="button button-secondary" href="results.html">결과 · 순위 확인</a>
             <a class="button button-secondary" href="#teams">참가팀 확인</a>
           </div>
         </div>
@@ -60,7 +62,7 @@
           </div>
           <div class="hero-card-row">
             <span>상태</span>
-            <strong class="status-open">SUBMISSION OPEN</strong>
+            <strong class="status-open" id="submission-status-display">상태 확인 중</strong>
           </div>
         </aside>
       </div>
@@ -88,8 +90,8 @@
       <div class="status-grid">
         <article class="status-card">
           <span class="status-label">제출 상태</span>
-          <strong class="status-value">접수 중</strong>
-          <p>마감 전까지 발급받은 개인 제출 코드로 한 번 제출할 수 있습니다.</p>
+          <strong class="status-value" id="submission-status-title">확인 중</strong>
+          <p id="submission-status-description">서버에서 제출 가능 여부를 확인하는 중입니다.</p>
         </article>
 
         <article class="status-card">
@@ -117,6 +119,7 @@
       </div>
 
       <form class="prediction-form" id="prediction-form">
+        <p id="submission-closed-message" class="submission-closed-notice" hidden>승부예측 제출이 마감되었습니다. <a href="results.html">결과 및 순위 확인하기</a></p>
         <section class="form-block identity-block">
           <div class="form-block-header">
             <div>
